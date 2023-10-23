@@ -1,0 +1,54 @@
+training_data = []
+
+def create_training_data():
+    for category in CATEGORIES:
+        path = os.path.join(DATADIR, category)
+        class_num = CATEGORIES.index(category)
+        for img in os.listdir(path):
+            try:
+                img_array = cv2.imread(os.path.join(path,img))
+                new_array = cv2.resize(img_array, (IMG_WTD, IMG_HGT))
+                training_data.append([new_array, class_num])
+            except Exception as e:
+                pass #Normally trow the excepion to firure out what's going wrong
+            
+create_training_data()
+
+-------------
+
+print(new_array)
+
+-------------
+
+print(len(training_data))
+
+-------------
+
+import random
+
+random.shuffle(training_data)
+
+-------------
+
+for sample in training_data[:10]:
+    print(sample[1])
+
+-------------
+
+X_train = []
+y_train = []
+
+-------------
+
+for features, label in training_data:
+    X_train.append(features)
+    y_train.append(label)
+
+X_train = np.array(X_train).reshape(-1, IMG_WTD, IMG_HGT, 3)
+y_train = np.array(y_train)
+
+-------------
+
+print(X_train[1])
+
+-------------

@@ -1,0 +1,190 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+import cv2
+
+DATADIR = "G:\JupyterData\Dog_Images"
+CATEGORIES = ['Basset','Borzoi','Golden_retriever','Irish_wolfhound','Labrador_retriever']
+
+for category in CATEGORIES:
+    path = os.path.join(DATADIR, category)
+    for img in os.listdir(path):
+        img_array = cv2.imread(os.path.join(path,img), cv2.IMREAD_GRAYSCALE)
+        plt.imshow(img_array, cmap="gray")
+        plt.show()
+        break
+    break
+
+-------------
+
+IMG_WTD = 120
+IMG_HGT = 80
+
+new_array = cv2.resize(img_array, (IMG_WTD, IMG_HGT))
+plt.imshow(new_array, cmap="gray")
+plt.show()
+
+-------------
+
+training_data = []
+
+def create_training_data():
+    for category in CATEGORIES:
+        path = os.path.join(DATADIR, category)
+        class_num = CATEGORIES.index(category)
+        for img in os.listdir(path):
+            try:
+                img_array = cv2.imread(os.path.join(path,img), cv2.IMREAD_GRAYSCALE)
+                new_array = cv2.resize(img_array, (IMG_WTD, IMG_HGT))
+                training_data.append([new_array, class_num])
+            except Exception as e:
+                pass #Normally trow the excepion to firure out what's going wrong
+            
+create_training_data()
+
+-------------
+
+print(new_array)
+
+-------------
+
+print(len(training_data))
+
+-------------
+
+import random
+
+random.shuffle(training_data)
+
+-------------
+
+for sample in training_data[:10]:
+    print(sample[1])
+
+-------------
+
+X_train = []
+y_train = []
+
+-------------
+
+for features, label in training_data:
+    X_train.append(features)
+    y_train.append(label)
+
+#X_train = np.array(X_train).reshape(-1, IMG_WTD, IMG_HGT, 1)
+
+-------------
+
+print(X_train[1])
+
+-------------
+
+#import pickle
+
+#pickle_out = open("X.pickle","wb")
+#pickle.dump(X_train, pickle_out)
+#pickle_out.close()
+
+#pickle_out = open("y.pickle","wb")
+#pickle.dump(y_train, pickle_out)
+#pickle_out.close()
+
+-------------
+
+#Teraz pora na dostarczenie daych do sieci
+
+-------------
+
+import tensorflow as tf
+from tensorflow.keras.datasets import cifar10
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout, Activation, Flatten, Conv2D, MaxPooling2D
+
+#pickle_in = open("X.pickle","rb")
+#X_train = pickle.load(pickle_in)
+
+#pickle_in = open("y.pickle","rb")
+#y_train = pickle.load(pickle_in)
+
+#X = X/255.0
+#X = np.asarray(X, dtype = 'int')
+#X_train = tf.keras.utils.normalize(X_train, axis=1)
+#X_train = [eval(i) for i in X_train]
+
+#for i in range(0, len(X_train)-1):
+#    X_train[i] = int(X_train[i])
+
+
+model = Sequential()
+
+model.add(Conv2D(64, (3, 3), input_shape=X.shape[1:]))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+
+model.add(Conv2D(64, (3, 3)))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+
+model.add(Flatten())  # this converts our 3D feature maps to 1D feature vectors
+
+model.add(Dense(64))
+
+model.add(Dense(5))
+model.add(Activation('sigmoid'))
+
+model.compile(loss='sparse_categorical_crossentropy',
+              optimizer='adam',
+              metrics=['accuracy'])
+
+-------------
+
+#model.fit(X_train, y_train, batch_size=32, epochs=1, validation_split=0.1)
+model.fit(X_train, y_train, batch_size=32, epochs=1)
+
+-------------
+
+#Architektura AlexNet jako model_1
+
+import keras.layers as layers
+
+model_1 = Sequential()
+# Obraz Grayscale w rozmiarze IMG_WTD x IMG_HGT
+model_1.add(layers.Conv2D(filters=96, kernel_size=(11, 11), 
+                        strides=(4, 4), activation="relu", 
+                        input_shape=(IMG_WTD, IMG_HGT, 1)))
+
+
+model_1.add(layers.BatchNormalization())
+model_1.add(layers.MaxPool2D(pool_size=(3, 3), strides= (2, 2)))
+model_1.add(layers.Conv2D(filters=256, kernel_size=(5, 5), 
+                        strides=(1, 1), activation="relu", 
+                        padding="same"))
+model_1.add(layers.BatchNormalization())
+model_1.add(layers.MaxPool2D(pool_size=(3, 3), strides=(2, 2)))
+model_1.add(layers.Conv2D(filters=384, kernel_size=(3, 3), 
+                        strides=(1, 1), activation="relu", 
+                        padding="same"))
+model_1.add(layers.BatchNormalization())
+model_1.add(layers.Conv2D(filters=384, kernel_size=(3, 3), 
+                        strides=(1, 1), activation="relu", 
+                        padding="same"))
+model_1.add(layers.BatchNormalization())
+model_1.add(layers.Conv2D(filters=256, kernel_size=(3, 3), 
+                        strides=(1, 1), activation="relu", 
+                        padding="same"))
+model_1.add(layers.BatchNormalization())
+model_1.add(layers.MaxPool2D(pool_size=(3, 3), strides=(2, 2)))
+model_1.add(layers.Flatten())
+model_1.add(layers.Dense(4096, activation="relu"))
+model_1.add(layers.Dropout(0.5))
+model_1.add(layers.Dense(5, activation="softmax"))
+
+model_1.compile(loss='sparse_categorical_crossentropy',
+              optimizer='adam',
+              metrics=['accuracy'])
+
+model_1.summary()
+
+-------------
